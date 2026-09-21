@@ -57,6 +57,15 @@ contract SimpleCoin42Test is Test {
         assertEq(simpleCoin42.balanceOf(addr), balance);
     }
 
+    function testFuzz_Allowance(
+        address owner,
+        address spender,
+        uint256 allowanceToAssign
+    ) public {
+        setAllowance(owner, spender, allowanceToAssign);
+        assertEq(simpleCoin42.allowance(owner, spender), allowanceToAssign);
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
@@ -78,5 +87,18 @@ contract SimpleCoin42Test is Test {
         }
 
         assertEq(simpleCoin42.balanceOf(user), amount);
+    }
+
+    function setAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) private {
+        hoax(owner);
+        vm.expectEmit();
+        emit SimpleCoin42.Approval(owner, spender, amount);
+        simpleCoin42.approve(spender, amount);
+
+        assertEq(simpleCoin42.allowance(owner, spender), amount);
     }
 }
