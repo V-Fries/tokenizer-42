@@ -248,18 +248,16 @@ contract SimpleCoin42Test is Test {
     ) public {
         vm.assume(owner != address(0));
         vm.assume(spender != address(0));
+        vm.assume(owner != spender);
         vm.assume(initialOwnerBalance >= toBurn);
         vm.assume(allowance < toBurn);
         vm.assume(
-            owner == spender ||
-                initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+            initialOwnerBalance <= type(uint256).max - initialSpenderBalance
         );
 
         setBalance(owner, initialOwnerBalance);
-        if (spender != owner) {
-            setBalance(spender, initialSpenderBalance);
-            setAllowance(owner, spender, allowance);
-        }
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
 
         uint256 startingSupply = simpleCoin42.totalSupply();
 
@@ -274,10 +272,8 @@ contract SimpleCoin42Test is Test {
         simpleCoin42.burnTokensFrom(owner, toBurn);
 
         assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
-        if (spender != owner) {
-            assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
-            assertEq(simpleCoin42.allowance(owner, spender), allowance);
-        }
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+        assertEq(simpleCoin42.allowance(owner, spender), allowance);
         assertEq(startingSupply, simpleCoin42.totalSupply());
     }
 
