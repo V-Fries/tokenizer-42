@@ -277,6 +277,107 @@ contract SimpleCoin42Test is Test {
         assertEq(startingSupply, simpleCoin42.totalSupply());
     }
 
+    function testFuzz_TransferValid(
+        address user,
+        uint256 initialUserBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 amount
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(initialUserBalance >= amount);
+        vm.assume(
+            user == dest ||
+                initialUserBalance <= type(uint256).max - initialDestBalance
+        );
+        vm.assume(
+            user == dest || initialDestBalance <= type(uint256).max - amount
+        );
+
+        setBalance(user, initialUserBalance);
+        if (user != dest) {
+            setBalance(dest, initialDestBalance);
+        }
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(user, dest, amount);
+        assertEq(simpleCoin42.transfer(dest, amount), true);
+
+        if (user != dest) {
+            assertEq(simpleCoin42.balanceOf(user), initialUserBalance - amount);
+            assertEq(simpleCoin42.balanceOf(dest), initialDestBalance + amount);
+        } else {
+            assertEq(simpleCoin42.balanceOf(user), initialUserBalance);
+        }
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+    }
+
+    function testFuzz_TransferInsufficientBalance(
+        address user,
+        uint256 initialUserBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 amount
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(initialUserBalance < amount);
+        vm.assume(
+            user == dest ||
+                initialUserBalance <= type(uint256).max - initialDestBalance
+        );
+        vm.assume(
+            user == dest || initialDestBalance <= type(uint256).max - amount
+        );
+
+        setBalance(user, initialUserBalance);
+        if (user != dest) {
+            setBalance(dest, initialDestBalance);
+        }
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialUserBalance
+            )
+        );
+        simpleCoin42.transfer(dest, amount);
+
+        assertEq(simpleCoin42.balanceOf(user), initialUserBalance);
+        if (user != dest) {
+            assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+        }
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+    }
+
+    function testFuzz_TransferInvalidDest(
+        address user,
+        uint256 initialUserBalance,
+        uint256 amount
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(initialUserBalance >= amount);
+
+        setBalance(user, initialUserBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectRevert("token receiver may not be 0");
+        simpleCoin42.transfer(address(0), amount);
+
+        assertEq(simpleCoin42.balanceOf(user), initialUserBalance);
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
