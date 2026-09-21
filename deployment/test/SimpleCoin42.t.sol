@@ -107,6 +107,53 @@ contract SimpleCoin42Test is Test {
         assertEq(startingSupply, simpleCoin42.totalSupply());
     }
 
+    function testFuzz_burnTokensValid(
+        address user,
+        uint256 userBalance,
+        uint256 toBurn
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(userBalance >= toBurn);
+
+        setBalance(user, userBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(user, address(0), toBurn);
+        simpleCoin42.burnTokens(toBurn);
+
+        assertEq(simpleCoin42.balanceOf(user), userBalance - toBurn);
+        assertEq(startingSupply - toBurn, simpleCoin42.totalSupply());
+    }
+
+    function testFuzz_burnTokensBalanceTooLow(
+        address user,
+        uint256 userBalance,
+        uint256 toBurn
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(userBalance < toBurn);
+
+        setBalance(user, userBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                toBurn,
+                userBalance
+            )
+        );
+        simpleCoin42.burnTokens(toBurn);
+
+        assertEq(simpleCoin42.balanceOf(user), userBalance);
+        assertEq(startingSupply, simpleCoin42.totalSupply());
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
