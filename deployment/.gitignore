@@ -1,4 +1,5 @@
 # Ignoring code in src as we are forced to have the code in ../code/ by the 42 school subject
+src/
 
 # Compiler files
 cache/
