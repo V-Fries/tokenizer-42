@@ -66,6 +66,47 @@ contract SimpleCoin42Test is Test {
         assertEq(simpleCoin42.allowance(owner, spender), allowanceToAssign);
     }
 
+    function testFuzz_MintTokensValid(address user, uint256 amount) public {
+        vm.assume(user != address(0));
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(creator);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(address(0), user, amount);
+        simpleCoin42.mintTokens(user, amount);
+
+        assertEq(simpleCoin42.balanceOf(user), amount);
+        assertEq(startingSupply + amount, simpleCoin42.totalSupply());
+    }
+
+    function testFuzz_MintTokensReceiverIs0(uint256 amount) public {
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(creator);
+        vm.expectRevert("token receiver may not be 0");
+        simpleCoin42.mintTokens(address(0), amount);
+
+        assertEq(simpleCoin42.balanceOf(address(0)), 0);
+        assertEq(startingSupply, simpleCoin42.totalSupply());
+    }
+
+    function testFuzz_MintTokensCallerIsNotCreator(
+        address user,
+        uint256 amount
+    ) public {
+        vm.assume(user != creator);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(user);
+        vm.expectRevert("Requires caller to be the contract creator");
+        simpleCoin42.mintTokens(user, amount);
+
+        assertEq(simpleCoin42.balanceOf(user), 0);
+        assertEq(startingSupply, simpleCoin42.totalSupply());
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
