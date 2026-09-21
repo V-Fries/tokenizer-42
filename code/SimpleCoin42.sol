@@ -2,14 +2,14 @@
 pragma solidity ^0.8.37;
 
 /// @notice Simple ERC-20 compliant token
-contract VFCoin42 {
+contract SimpleCoin42 {
     // ------------------------------------- State ------------------------------------------------
 
     /// @return Name of the token
-    string public constant name = "VFCoin42";
+    string public constant name = "SimpleCoin42";
 
     /// @return Symbol of the token
-    string public constant symbol = "VFC42";
+    string public constant symbol = "SC42";
 
     /// @return Number of decimals the token uses. Tokens are displayed as `tokens / 10^decimals`
     uint8 public constant decimals = 18;
