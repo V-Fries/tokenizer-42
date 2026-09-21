@@ -18,4 +18,8 @@ contract SimpleCoin42Test is Test {
     function test_Symbol() public view {
         assertEq(simpleCoin42.symbol(), "SC42");
     }
+
+    function test_Decimals() public view {
+        assertEq(simpleCoin42.decimals(), 18);
+    }
 }
