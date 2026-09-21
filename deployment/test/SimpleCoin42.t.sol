@@ -154,6 +154,133 @@ contract SimpleCoin42Test is Test {
         assertEq(startingSupply, simpleCoin42.totalSupply());
     }
 
+    function testFuzz_burnTokensFromValid(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 toBurn
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(initialOwnerBalance >= toBurn);
+        vm.assume(allowance >= toBurn);
+        vm.assume(
+            owner == spender ||
+                initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        if (spender != owner) {
+            setBalance(spender, initialSpenderBalance);
+            setAllowance(owner, spender, allowance);
+        }
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, address(0), toBurn);
+        simpleCoin42.burnTokensFrom(owner, toBurn);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance - toBurn);
+        if (spender != owner) {
+            assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+            assertEq(
+                simpleCoin42.allowance(owner, spender),
+                allowance - toBurn
+            );
+        }
+        assertEq(startingSupply - toBurn, simpleCoin42.totalSupply());
+    }
+
+    function testFuzz_burnTokensFromInsufficientBalance(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 toBurn
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(initialOwnerBalance < toBurn);
+        vm.assume(allowance >= toBurn);
+        vm.assume(
+            owner == spender ||
+                initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        if (spender != owner) {
+            setBalance(spender, initialSpenderBalance);
+            setAllowance(owner, spender, allowance);
+        }
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                toBurn,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.burnTokensFrom(owner, toBurn);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        if (spender != owner) {
+            assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+            assertEq(simpleCoin42.allowance(owner, spender), allowance);
+        }
+        assertEq(startingSupply, simpleCoin42.totalSupply());
+    }
+
+    function testFuzz_burnTokensFromInsufficientAllowance(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 toBurn
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(initialOwnerBalance >= toBurn);
+        vm.assume(allowance < toBurn);
+        vm.assume(
+            owner == spender ||
+                initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        if (spender != owner) {
+            setBalance(spender, initialSpenderBalance);
+            setAllowance(owner, spender, allowance);
+        }
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientAllowance.selector,
+                toBurn,
+                allowance
+            )
+        );
+        simpleCoin42.burnTokensFrom(owner, toBurn);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        if (spender != owner) {
+            assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+            assertEq(simpleCoin42.allowance(owner, spender), allowance);
+        }
+        assertEq(startingSupply, simpleCoin42.totalSupply());
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
