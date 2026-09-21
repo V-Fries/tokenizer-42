@@ -14,4 +14,8 @@ contract SimpleCoin42Test is Test {
     function test_Name() public view {
         assertEq(simpleCoin42.name(), "SimpleCoin42");
     }
+
+    function test_Symbol() public view {
+        assertEq(simpleCoin42.symbol(), "SC42");
+    }
 }
