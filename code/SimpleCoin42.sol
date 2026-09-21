@@ -123,7 +123,7 @@ contract SimpleCoin42 {
     /// @dev Emits Transfer(address(0), receiver, value) on success (even if value is 0)
     /// @param receiver Address to which the new tokens should be sent
     /// @param value Number of tokens to mint
-    function mint_tokens(
+    function mintTokens(
         address receiver,
         uint256 value
     ) external callerIsContractCreator isValidTokenReceiver(receiver) {
@@ -135,7 +135,7 @@ contract SimpleCoin42 {
     /// @dev Burns (destroy) value tokens belonging to the caller
     /// @dev Emits Transfer(msg.sender, address(0), value) on success (even if value is 0)
     /// @param value Number of tokens to burn
-    function burn_tokens(
+    function burnTokens(
         uint256 value
     ) external hasRequiredBalance(msg.sender, value) {
         _burnTokensUnchecked(msg.sender, value);
@@ -146,7 +146,7 @@ contract SimpleCoin42 {
     /// @dev When _from is not the caller, _from must have allowed the caller to used _value tokens with approve(_spender, _value)
     /// @param from Address from which the tokens should be taken
     /// @param value Number of tokens to burn
-    function burn_tokens_from(
+    function burnTokensFrom(
         address from,
         uint256 value
     )
