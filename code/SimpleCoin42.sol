@@ -6,13 +6,13 @@ contract SimpleCoin42 {
     // ------------------------------------- State ------------------------------------------------
 
     /// @return Name of the token
-    string public constant name = "SimpleCoin42";
+    string public name;
 
     /// @return Symbol of the token
-    string public constant symbol = "SC42";
+    string public symbol;
 
     /// @return Number of decimals the token uses. Tokens are displayed as `tokens / 10^decimals`
-    uint8 public constant decimals = 18;
+    uint8 public immutable decimals;
 
     /// @return Total number of tokens currently in circulation
     uint256 public totalSupply;
@@ -112,7 +112,14 @@ contract SimpleCoin42 {
     // ------------------------------------ Constructor -------------------------------------------
 
     // constructor is called only when the contract is created
-    constructor() {
+    constructor(
+        string memory contractName,
+        string memory contractSymbol,
+        uint8 contractDecimals
+    ) {
+        name = contractName;
+        symbol = contractSymbol;
+        decimals = contractDecimals;
         _contractCreator = msg.sender;
     }
 

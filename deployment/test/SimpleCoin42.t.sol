@@ -5,26 +5,37 @@ import {Test} from "forge-std/Test.sol";
 import {SimpleCoin42} from "../src/SimpleCoin42.sol";
 
 contract SimpleCoin42Test is Test {
+    string contractName;
+    string contractSymbol;
+    uint8 contractDecimals;
     address creator;
 
     SimpleCoin42 public simpleCoin42;
 
     function setUp() public {
+        contractName = string(vm.randomBytes(vm.randomUint() % 100));
+        contractSymbol = string(vm.randomBytes(vm.randomUint() % 100));
+        contractDecimals = uint8(vm.randomUint());
+
         creator = makeAddr("owner");
         hoax(creator);
-        simpleCoin42 = new SimpleCoin42();
+        simpleCoin42 = new SimpleCoin42(
+            contractName,
+            contractSymbol,
+            contractDecimals
+        );
     }
 
     function test_Name() public view {
-        assertEq(simpleCoin42.name(), "SimpleCoin42");
+        assertEq(simpleCoin42.name(), contractName);
     }
 
     function test_Symbol() public view {
-        assertEq(simpleCoin42.symbol(), "SC42");
+        assertEq(simpleCoin42.symbol(), contractSymbol);
     }
 
     function test_Decimals() public view {
-        assertEq(simpleCoin42.decimals(), 18);
+        assertEq(simpleCoin42.decimals(), contractDecimals);
     }
 
     function testFuzz_TotalSupply(
