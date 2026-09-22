@@ -80,6 +80,49 @@ contract SimpleCoin42Test is Test {
         assertEq(startingSupply + amount, simpleCoin42.totalSupply());
     }
 
+    function testFuzz_MintTokensValidMultipleInARow(
+        address user,
+        uint256 amount_1,
+        uint256 amount_2,
+        uint256 amount_3
+    ) public {
+        vm.assume(user != address(0));
+        vm.assume(amount_1 <= type(uint256).max - amount_2);
+        vm.assume(amount_1 + amount_2 <= type(uint256).max - amount_3);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(creator);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(address(0), user, amount_1);
+        simpleCoin42.mintTokens(user, amount_1);
+
+        assertEq(simpleCoin42.balanceOf(user), amount_1);
+        assertEq(startingSupply + amount_1, simpleCoin42.totalSupply());
+
+        hoax(creator);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(address(0), user, amount_2);
+        simpleCoin42.mintTokens(user, amount_2);
+
+        assertEq(simpleCoin42.balanceOf(user), amount_1 + amount_2);
+        assertEq(
+            startingSupply + amount_1 + amount_2,
+            simpleCoin42.totalSupply()
+        );
+
+        hoax(creator);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(address(0), user, amount_3);
+        simpleCoin42.mintTokens(user, amount_3);
+
+        assertEq(simpleCoin42.balanceOf(user), amount_1 + amount_2 + amount_3);
+        assertEq(
+            startingSupply + amount_1 + amount_2 + amount_3,
+            simpleCoin42.totalSupply()
+        );
+    }
+
     function testFuzz_MintTokensReceiverIs0(uint256 amount) public {
         uint256 startingSupply = simpleCoin42.totalSupply();
 
