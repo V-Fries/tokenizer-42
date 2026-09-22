@@ -378,6 +378,490 @@ contract SimpleCoin42Test is Test {
         assertEq(simpleCoin42.totalSupply(), startingSupply);
     }
 
+    function testFuzz_TransferFromValidOwnerSpenderDestAreDistinct(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != dest);
+        vm.assume(owner != spender);
+        vm.assume(dest != spender);
+        vm.assume(initialOwnerBalance >= amount);
+        vm.assume(allowance >= amount);
+        vm.assume(initialDestBalance <= type(uint256).max - amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+        vm.assume(
+            initialOwnerBalance + initialDestBalance <=
+                type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, dest, amount);
+        assertEq(simpleCoin42.transferFrom(owner, dest, amount), true);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance - amount);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance + amount);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromValidOwnerSpenderDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(initialOwnerBalance >= amount);
+        vm.assume(initialOwnerBalance <= type(uint256).max - amount);
+
+        setBalance(owner, initialOwnerBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(owner);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, owner, amount);
+        assertEq(simpleCoin42.transferFrom(owner, owner, amount), true);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+    }
+
+    function testFuzz_TransferFromValidOwnerSpenderAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(owner != dest);
+        vm.assume(initialOwnerBalance >= amount);
+        vm.assume(initialDestBalance <= type(uint256).max - amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(owner);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, dest, amount);
+        assertEq(simpleCoin42.transferFrom(owner, dest, amount), true);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance - amount);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance + amount);
+    }
+
+    function testFuzz_TransferFromValidOwnerDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != spender);
+        vm.assume(initialOwnerBalance >= amount);
+        vm.assume(allowance >= amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, owner, amount);
+        assertEq(simpleCoin42.transferFrom(owner, owner, amount), true);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromValidBalanceSpenderDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(owner != dest);
+        vm.assume(initialOwnerBalance >= amount);
+        vm.assume(allowance >= amount);
+        vm.assume(initialDestBalance <= type(uint256).max - amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setAllowance(owner, dest, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(dest);
+        vm.expectEmit();
+        emit SimpleCoin42.Transfer(owner, dest, amount);
+        assertEq(simpleCoin42.transferFrom(owner, dest, amount), true);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance - amount);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance + amount);
+    }
+
+    function testFuzz_TransferFromInsufficientBalanceOwnerSpenderDestAreDistinct(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != dest);
+        vm.assume(owner != spender);
+        vm.assume(dest != spender);
+        vm.assume(initialOwnerBalance < amount);
+        vm.assume(allowance >= amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+        vm.assume(
+            initialOwnerBalance + initialDestBalance <=
+                type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.transferFrom(owner, dest, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientBalanceOwnerSpenderDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(initialOwnerBalance < amount);
+
+        setBalance(owner, initialOwnerBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.transferFrom(owner, owner, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientBalanceOwnerSpenderAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(owner != dest);
+        vm.assume(initialOwnerBalance < amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.transferFrom(owner, dest, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientBalanceOwnerDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != spender);
+        vm.assume(initialOwnerBalance < amount);
+        vm.assume(allowance >= amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.transferFrom(owner, owner, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientBalanceSpenderDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(owner != dest);
+        vm.assume(initialOwnerBalance < amount);
+        vm.assume(allowance >= amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setAllowance(owner, dest, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(dest);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientBalance.selector,
+                amount,
+                initialOwnerBalance
+            )
+        );
+        simpleCoin42.transferFrom(owner, dest, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientAllowanceOwnerSpenderDestAreDistinct(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != dest);
+        vm.assume(owner != spender);
+        vm.assume(dest != spender);
+        vm.assume(allowance < amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+        vm.assume(
+            initialOwnerBalance + initialDestBalance <=
+                type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientAllowance.selector,
+                amount,
+                allowance
+            )
+        );
+        simpleCoin42.transferFrom(owner, dest, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientAllowanceOwnerDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address spender,
+        uint256 initialSpenderBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(owner != spender);
+        vm.assume(allowance < amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialSpenderBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setBalance(spender, initialSpenderBalance);
+        setAllowance(owner, spender, allowance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientAllowance.selector,
+                amount,
+                allowance
+            )
+        );
+        simpleCoin42.transferFrom(owner, owner, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(spender), initialSpenderBalance);
+    }
+
+    function testFuzz_TransferFromInsufficientAllowanceSpenderDestAreTheSame(
+        address owner,
+        uint256 initialOwnerBalance,
+        address dest,
+        uint256 initialDestBalance,
+        uint256 allowance,
+        uint256 amount
+    ) public {
+        vm.assume(owner != address(0));
+        vm.assume(dest != address(0));
+        vm.assume(owner != dest);
+        vm.assume(allowance < amount);
+        vm.assume(
+            initialOwnerBalance <= type(uint256).max - initialDestBalance
+        );
+
+        setBalance(owner, initialOwnerBalance);
+        setAllowance(owner, dest, allowance);
+        setBalance(dest, initialDestBalance);
+
+        uint256 startingSupply = simpleCoin42.totalSupply();
+
+        hoax(dest);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SimpleCoin42.InsufficientAllowance.selector,
+                amount,
+                allowance
+            )
+        );
+        simpleCoin42.transferFrom(owner, dest, amount);
+
+        assertEq(simpleCoin42.totalSupply(), startingSupply);
+
+        assertEq(simpleCoin42.balanceOf(owner), initialOwnerBalance);
+        assertEq(simpleCoin42.balanceOf(dest), initialDestBalance);
+    }
+
     function setBalance(address user, uint256 amount) private {
         uint256 currentBalance = simpleCoin42.balanceOf(user);
         uint256 startingSupply = simpleCoin42.totalSupply();
