@@ -947,7 +947,7 @@ contract SimpleCoin42Test is Test {
         hoax(owner);
         vm.expectEmit();
         emit SimpleCoin42.Approval(owner, spender, amount);
-        simpleCoin42.approve(spender, amount);
+        assertEq(simpleCoin42.approve(spender, amount), true);
 
         assertEq(simpleCoin42.allowance(owner, spender), amount);
     }
