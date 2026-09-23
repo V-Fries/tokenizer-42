@@ -17,7 +17,7 @@
   ```
 - Run the deploy script (Make sure to note down the contract address outputed by this command):
   ```sh
-  forge script script/DeployContract.s.sol --broadcast --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+  forge script script/DeployContract.s.sol --broadcast --rpc-url $RPC_URL --private-key $WALLET_PRIVATE_KEY
   ```
 
 # Etherscan links
@@ -39,5 +39,5 @@ Feel free to modify the contents to run your own tests.
 The script is ran with this command:
 
 ```sh
-forge script script/Testing.s.sol --broadcast --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+forge script script/Testing.s.sol --broadcast --rpc-url $RPC_URL --private-key $WALLET_PRIVATE_KEY
 ```
