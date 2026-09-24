@@ -15,6 +15,7 @@
   forge test --brutalize
   forge test --mutate
   ```
+  (Survived mutant with - addr != address(0) + addr > address(0) is expected and normal)
 - Run the deploy script (Make sure to note down the contract address outputed by this command):
   ```sh
   forge script script/DeployContract.s.sol --broadcast --rpc-url $RPC_URL --private-key $WALLET_PRIVATE_KEY
