@@ -3,7 +3,7 @@
 ## Creating an Ethereum wallet
 
 In order to publish a smart-contract on Ethereum, we need an Ethereum wallet.
-You can create one a platform like `MetaMash` (which ever platform you use, make sure they let you
+You can create one a platform like `MetaMask` (which ever platform you use, make sure they let you
 access your wallet's private key.)
 
 Take note of your wallet's private key, it will be used during the deployment commands.
